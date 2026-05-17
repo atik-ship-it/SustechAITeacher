@@ -15,7 +15,7 @@ namespace SustechAITeacher.Bots
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
-            // Send a typing indicator so the user knows the AI is thinking
+            // Send a typing indicator
             await turnContext.SendActivityAsync(new Activity { Type = ActivityTypes.Typing }, cancellationToken);
 
             string userMessage = turnContext.Activity.Text;
@@ -26,7 +26,6 @@ namespace SustechAITeacher.Bots
 
         private async Task<string> GetAIResponse(string prompt)
         {
-            // Pulling credentials safely from Azure Environment Variables
             string endpoint = Environment.GetEnvironmentVariable("AZURE_AI_ENDPOINT");
             string apiKey = Environment.GetEnvironmentVariable("AZURE_AI_API_KEY");
             string modelName = Environment.GetEnvironmentVariable("AZURE_AI_MODEL_NAME"); 
@@ -36,21 +35,18 @@ namespace SustechAITeacher.Bots
                 return "My AI brain is not connected yet! Please add my API keys in Azure Environment Variables.";
             }
 
-            // Default to gpt-4o if no model name is specified
-            if (string.IsNullOrEmpty(modelName)) { modelName = "gpt-4o"; }
+            if (string.IsNullOrEmpty(modelName)) { modelName = "gpt-5.2-chat"; }
 
             try
             {
-                // Format the endpoint correctly for Azure AI Foundry
-                string requestUrl = endpoint.EndsWith("/") ? $"{endpoint}chat/completions" : $"{endpoint}/chat/completions";
-                requestUrl += "?api-version=2024-05-01-preview";
+                // FIX: Construct the exact URL required by Azure Cognitive Services
+                if (!endpoint.EndsWith("/")) { endpoint += "/"; }
+                string requestUrl = $"{endpoint}openai/deployments/{modelName}/chat/completions?api-version=2024-12-01-preview";
 
                 var requestBody = new
                 {
-                    model = modelName,
                     messages = new[]
                     {
-                        // THIS IS THE TEACHER PERSONA
                         new { role = "system", content = "You are the Sustech AI Teacher. You are an expert, patient, and knowledgeable educator. Answer questions clearly, encouragingly, and professionally." },
                         new { role = "user", content = prompt }
                     },
