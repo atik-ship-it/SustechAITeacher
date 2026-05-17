@@ -1,25 +1,30 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Integration.AspNet.Core;
+using SustechAITeacher.Bots;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddRazorPages();
+builder.Services.AddHttpClient().AddControllers().AddNewtonsoftJson();
+
+// Bot Framework Adapter এবং বটের সার্ভিস রেজিস্টার করা
+builder.Services.AddSingleton<IBotFrameworkHttpAdapter, AdapterWithErrorHandler>();
+builder.Services.AddTransient<IBot, EchoBot>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    app.UseDeveloperExceptionPage();
 }
 
-app.UseHttpsRedirection();
+app.UseDefaultFiles();
 app.UseStaticFiles();
-
+app.UseWebSockets();
 app.UseRouting();
-
 app.UseAuthorization();
-
-app.MapRazorPages();
+app.MapControllers();
 
 app.Run();
