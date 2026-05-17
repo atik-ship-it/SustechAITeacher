@@ -48,8 +48,8 @@ namespace SustechAITeacher.Bots
                         new { role = "system", content = "You are the Sustech AI Teacher. You are an expert, patient, and knowledgeable educator. Answer questions clearly, encouragingly, and professionally." },
                         new { role = "user", content = prompt }
                     },
-                    max_completion_tokens = 1000, // <--- THIS IS THE FIX!
-                    temperature = 0.7
+                    max_completion_tokens = 1000
+                    // We removed the temperature setting here!
                 };
 
                 var content = new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8, "application/json");
