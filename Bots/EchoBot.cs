@@ -15,7 +15,6 @@ namespace SustechAITeacher.Bots
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
-            // Send a typing indicator
             await turnContext.SendActivityAsync(new Activity { Type = ActivityTypes.Typing }, cancellationToken);
 
             string userMessage = turnContext.Activity.Text;
@@ -26,9 +25,10 @@ namespace SustechAITeacher.Bots
 
         private async Task<string> GetAIResponse(string prompt)
         {
-            string endpoint = Environment.GetEnvironmentVariable("AZURE_AI_ENDPOINT");
-            string apiKey = Environment.GetEnvironmentVariable("AZURE_AI_API_KEY");
-            string modelName = Environment.GetEnvironmentVariable("AZURE_AI_MODEL_NAME"); 
+            // The ?.Trim() ensures no accidental spaces break your keys!
+            string endpoint = Environment.GetEnvironmentVariable("AZURE_AI_ENDPOINT")?.Trim();
+            string apiKey = Environment.GetEnvironmentVariable("AZURE_AI_API_KEY")?.Trim();
+            string modelName = Environment.GetEnvironmentVariable("AZURE_AI_MODEL_NAME")?.Trim(); 
 
             if (string.IsNullOrEmpty(endpoint) || string.IsNullOrEmpty(apiKey))
             {
@@ -39,7 +39,6 @@ namespace SustechAITeacher.Bots
 
             try
             {
-                // FIX: Construct the exact URL required by Azure Cognitive Services
                 if (!endpoint.EndsWith("/")) { endpoint += "/"; }
                 string requestUrl = $"{endpoint}openai/deployments/{modelName}/chat/completions?api-version=2024-12-01-preview";
 
@@ -56,21 +55,25 @@ namespace SustechAITeacher.Bots
 
                 var content = new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8, "application/json");
                 
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Add("api-key", apiKey);
+                // Bulletproof way to send the API key
+                using (var request = new HttpRequestMessage(HttpMethod.Post, requestUrl))
+                {
+                    request.Headers.Add("api-key", apiKey);
+                    request.Content = content;
 
-                HttpResponseMessage response = await client.PostAsync(requestUrl, content);
-                
-                if (response.IsSuccessStatusCode)
-                {
-                    string responseString = await response.Content.ReadAsStringAsync();
-                    dynamic jsonResponse = JsonConvert.DeserializeObject(responseString);
-                    return jsonResponse.choices[0].message.content;
-                }
-                else
-                {
-                    string errorResponse = await response.Content.ReadAsStringAsync();
-                    return $"Error connecting to brain: {response.StatusCode} - {errorResponse}";
+                    HttpResponseMessage response = await client.SendAsync(request);
+                    
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string responseString = await response.Content.ReadAsStringAsync();
+                        dynamic jsonResponse = JsonConvert.DeserializeObject(responseString);
+                        return jsonResponse.choices[0].message.content;
+                    }
+                    else
+                    {
+                        string errorResponse = await response.Content.ReadAsStringAsync();
+                        return $"Error connecting to brain: {response.StatusCode} - {errorResponse}";
+                    }
                 }
             }
             catch (Exception ex)
