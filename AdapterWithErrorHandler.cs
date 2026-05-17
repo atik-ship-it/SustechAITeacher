@@ -1,17 +1,16 @@
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Extensions.Logging;
 
 namespace SustechAITeacher
 {
-    public class AdapterWithErrorHandler : BotFrameworkHttpAdapter
+    public class AdapterWithErrorHandler : CloudAdapter
     {
-        public AdapterWithErrorHandler(IConfiguration configuration, ILogger<BotFrameworkHttpAdapter> logger)
-            : base(configuration, logger)
+        public AdapterWithErrorHandler(BotFrameworkAuthentication auth, ILogger<IBotFrameworkHttpAdapter> logger)
+            : base(auth, logger)
         {
             OnTurnError = async (turnContext, exception) =>
             {
-                // কোনো এরর হলে বট এই মেসেজটি দেবে
                 await turnContext.SendActivityAsync("Sorry, it looks like something went wrong in the bot's code.");
             };
         }
