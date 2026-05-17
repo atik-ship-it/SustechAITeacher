@@ -6,7 +6,7 @@ name: Build and deploy ASP.Net Core app to Azure Web App - SustechAITeacher
 on:
   push:
     branches:
-      - feature/ai_new
+      - main
   workflow_dispatch:
 
 jobs:
