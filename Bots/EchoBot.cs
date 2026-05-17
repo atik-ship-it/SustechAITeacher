@@ -25,7 +25,6 @@ namespace SustechAITeacher.Bots
 
         private async Task<string> GetAIResponse(string prompt)
         {
-            // The ?.Trim() ensures no accidental spaces break your keys!
             string endpoint = Environment.GetEnvironmentVariable("AZURE_AI_ENDPOINT")?.Trim();
             string apiKey = Environment.GetEnvironmentVariable("AZURE_AI_API_KEY")?.Trim();
             string modelName = Environment.GetEnvironmentVariable("AZURE_AI_MODEL_NAME")?.Trim(); 
@@ -49,13 +48,12 @@ namespace SustechAITeacher.Bots
                         new { role = "system", content = "You are the Sustech AI Teacher. You are an expert, patient, and knowledgeable educator. Answer questions clearly, encouragingly, and professionally." },
                         new { role = "user", content = prompt }
                     },
-                    max_tokens = 1000,
+                    max_completion_tokens = 1000, // <--- THIS IS THE FIX!
                     temperature = 0.7
                 };
 
                 var content = new StringContent(JsonConvert.SerializeObject(requestBody), Encoding.UTF8, "application/json");
                 
-                // Bulletproof way to send the API key
                 using (var request = new HttpRequestMessage(HttpMethod.Post, requestUrl))
                 {
                     request.Headers.Add("api-key", apiKey);
